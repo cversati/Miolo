@@ -1,5 +1,3 @@
-module locahost.com/start
+module github.com/cversati/Miolo
 
 go 1.13
-
-replace localhost.com/rna => rna
