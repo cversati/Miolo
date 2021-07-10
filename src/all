@@ -1,0 +1,4 @@
+echo "#1"
+go clean
+go build main.go rna.go sqlite3.go
+./main

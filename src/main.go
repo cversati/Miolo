@@ -2,9 +2,14 @@ package main
 
 import (
   "fmt"
-  rna "github.com/cversati/rna"
 )
 
 func main() {
-  fmt.Println("oi")
+  fmt.Println("osi")
+
+  SQLite3_Conecta()
+  Teste()
+  fmt.Println("adsfi")
+
+  Functest()
 }
