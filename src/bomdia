@@ -1,0 +1,6 @@
+echo "fazendo backup"
+git add .
+git config --global user.name cversati
+DATA=`date +%y%m%d-%H%M`
+git commit -m $DATA
+git push

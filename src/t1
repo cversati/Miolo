@@ -1,0 +1,13 @@
+echo \"$1\"
+
+DATA=`date +%y%m%d-%H%M`
+
+echo $DATA
+
+if [ $1 -eq "" ];
+then
+echo "tem parametro"
+else
+echo "nao tem"
+fi
+
