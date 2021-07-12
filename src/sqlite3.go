@@ -34,6 +34,18 @@ func BDSQLite3_Desconecta () {
 
 }
 
+func CarregaRede() {
+
+}
+
+func UpdateVariaveisAmbiente () {
+
+}
+
+func UpdateOutput () {
+  
+}
+
 func ReadItem(db *sql.DB) []TestItem {
 
     fmt.Println ("#2")
