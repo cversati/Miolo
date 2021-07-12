@@ -10,5 +10,7 @@ func main() {
   SQLite3_Conecta()
   fmt.Println("adsfi")
 
+  CarregaRede(1)
+
   Functest()
 }

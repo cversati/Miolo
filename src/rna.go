@@ -4,6 +4,41 @@ import (
   "fmt"
 )
 
+type enumStatusNeuronio int
+const (
+  Inativo = iota //0
+  Ativo
+)
+
+type enumCamadaNeuronio int
+const (
+  Entrada = iota // 0
+  Intermediaria1
+  Final = 9
+)
+
+type enumFuncaoAtivacao int
+const (
+  rnaFA_um = iota  //td ou nada
+  rnaFA_sempre //qlqr caso
+  rnaFA_entre //qlqr menos 1 e 0
+  rnaFA_zero //somente se 0
+)
+
+type enumFuncaoProcessamento int
+const (
+  rnaFP_MediaSimples = 1
+  rnaFP_MediaPonderada = 2
+  rnaFP_Somatoria = 3
+  rnaFP_Conjucao = 4
+  rnaFP_Disjucao = 5
+  rnaFP_Condicional = 6
+  rnaFP_Bicodicional = 7
+  rnaFP_XOR = 8
+  rnaFP_NOR = 9
+)
+
+
 /*Pontuacao:
 0.rnaPontua_ALS   PontuaAcimaLimiteSuperior (Sobejo superior)
 1.rnaPontua_ELSTS Entre LimiteSuperior e Threshold superior (entre sobejo e limiar)
@@ -35,6 +70,8 @@ const (
     rnaPontua_ELITS
 )
 
+
+
 type segmentosCurva struct {
     limiteInferior float64
     limiarInferior float64
@@ -43,28 +80,24 @@ type segmentosCurva struct {
     limiteSuperior float64
 }
 
+type structInput struct {
+    valor float64
+    idxNeuronio int32 //id do neuronio de origem da informacao, se zero  = inativo
+}
 
-/*
+type structNeuronio struct {
+    id int32
+    camada enumCamadaNeuronio
+    criterio enumCriterio //area de sucesso na curva
+    segmentos segmentosCurva //valores da curva
+    inputs [2]structInput
+    funcaoCondensacao enumFuncaoProcessamento //Usada na entrada do neuronio intermediario e final
+    funcaoAtivacao enumFuncaoAtivacao //a pensar: funcao de ativacao: o valor so passa para a proxima camada se chegar ate um valor
+    peso float64
+    output float64
+    status enumStatusNeuronio
+}
 
-struct structInput
-{
-    float valor;
-    short int idxNeuronio; //id do neuronio de origem da informacao, se zero  = inativo
-};
-struct structNeuronio
-{
-    unsigned long int id;
-    enumCamadaNeuronio camada;
-    enumCriterio criterio; //area de sucesso na curva
-    segmentosCurva segmentos; //valores da curva
-    structInput inputs[NR_INPUTS];
-    enumFuncaoProcessamento funcaoCondensacao; //Usada na entrada do neuronio intermediario e final
-    enumFuncaoAtivacao funcaoAtivacao;//a pensar: funcao de ativacao: o valor so passa para a proxima camada se chegar ate um valor
-    float peso;
-    float output;
-    enumStatusNeuronio status;
-};
-*/
 
 /*
 1-acima do limite superior
@@ -163,5 +196,4 @@ func isAtendeCriterio ( pPosicaoLinear int, pCriterio enumCriterio ) int {
 
 func Functest() {
   fmt.Println("sou o rna")
-  Teste()
 }
