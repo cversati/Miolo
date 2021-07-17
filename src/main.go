@@ -12,5 +12,4 @@ func main() {
 
   CarregaRede(1)
 
-  Functest()
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-  "fmt"
+//  "fmt"
 )
 
 type enumStatusNeuronio int
@@ -71,7 +71,6 @@ const (
 )
 
 
-
 type segmentosCurva struct {
     limiteInferior float64
     limiarInferior float64
@@ -85,17 +84,27 @@ type structInput struct {
     idxNeuronio int32 //id do neuronio de origem da informacao, se zero  = inativo
 }
 
+type structGrafo struct {
+    id_neuro_dst int32
+    id_neuro_orig int32
+    valor float64
+}
+
 type structNeuronio struct {
-    id int32
-    camada enumCamadaNeuronio
-    criterio enumCriterio //area de sucesso na curva
-    segmentos segmentosCurva //valores da curva
-    inputs [2]structInput
-    funcaoCondensacao enumFuncaoProcessamento //Usada na entrada do neuronio intermediario e final
-    funcaoAtivacao enumFuncaoAtivacao //a pensar: funcao de ativacao: o valor so passa para a proxima camada se chegar ate um valor
-    peso float64
-    output float64
-    status enumStatusNeuronio
+  id int32
+  camada enumCamadaNeuronio
+  criterio enumCriterio //area de sucesso na curva
+  limiteInferior float64
+  limiarInferior float64
+  valorReferencia float64
+  limiarSuperior float64
+  limiteSuperior float64
+  inputs [2]structInput
+  funcaoCondensacao enumFuncaoProcessamento //Usada na entrada do neuronio intermediario e final
+  funcaoAtivacao enumFuncaoAtivacao //a pensar: funcao de ativacao: o valor so passa para a proxima camada se chegar ate um valor
+  peso float64
+  output float64
+  status enumStatusNeuronio
 }
 
 
@@ -193,7 +202,3 @@ func isAtendeCriterio ( pPosicaoLinear int, pCriterio enumCriterio ) int {
       return -1;
   }
 */
-
-func Functest() {
-  fmt.Println("sou o rna")
-}
