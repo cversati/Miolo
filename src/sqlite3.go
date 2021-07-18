@@ -80,7 +80,7 @@ func CarregaRede( pIdRNA int ) bool {
   return true
 }
 
-func UpdateVariaveisAmbiente () {
+func UpdateVariaveis () {
 //checa se em conexao com o banco de dados
 //realiza o select da base transacoes
 }

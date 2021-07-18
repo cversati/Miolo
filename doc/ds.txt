@@ -1,0 +1,11 @@
+
+note over BCO:alimentacao da variaveis
+BCO->BCO:nova transacao
+BCO->FN:processa dados e\nalimenta base FN
+
+note over BCO:ativacao das RNA
+BCO->RNA:ativa as RNAS do cliente
+RNA->RNA:carrega a RNA
+RNA->FN:atualiza os neuronios
+RNA->RNA:executa a RNA
+
