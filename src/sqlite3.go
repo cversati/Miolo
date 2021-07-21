@@ -28,7 +28,7 @@ func CarregaRede( pIdRNA int ) bool {
   conexao:=SQLite3_Conecta ()
 
   //realiza o select
-  rowsNeuronio, err1 := conexao.Query ( "SELECT neuronio.id,camada,limite_superior,limiar_superior,valor_referencia,limiar_inferior,limite_inferior,criterio,status,peso,funcao_processamento, funcao_ativacao FROM neuronio,neuro_rna WHERE neuro_rna.id_neuro=neuronio.id AND neuro_rna.id_rna=" + strconv.Itoa(pIdRNA) )
+  rowsNeuronio, err1 := conexao.Query ( "SELECT id,camada,limite_superior,limiar_superior,valor_referencia,limiar_inferior,limite_inferior,criterio,status,peso,funcao_processamento, funcao_ativacao FROM neuronio WHERE id_rna=" + strconv.Itoa(pIdRNA) )
   if err1 != nil {
     panic(err1)
     return false
@@ -52,7 +52,7 @@ func CarregaRede( pIdRNA int ) bool {
   //zera inputs
 
   //realiza o select
-  rowsGrafo, err3 := conexao.Query ( "SELECT id_neuro_dst,id_neuro_orig,valor FROM input_neuro WHERE id_neuro_dst IN (SELECT id_neuro FROM neuro_rna WHERE id_rna=" + strconv.Itoa(pIdRNA) + ")" )
+  rowsGrafo, err3 := conexao.Query ( "SELECT id_neuro_dst,id_neuro_orig,valor FROM grafo WHERE id_rna=" + strconv.Itoa(pIdRNA) )
   if err3 != nil {
     panic(err3)
     return false
@@ -81,8 +81,14 @@ func CarregaRede( pIdRNA int ) bool {
 }
 
 func UpdateVariaveis () {
-//checa se em conexao com o banco de dados
+//checa  conexao com o banco de dados
+conexao:=SQLite3_Conecta ()
+
 //realiza o select da base transacoes
+
+
+//fecha conexao
+conexao.Close()
 }
 
 func UpdateOutput () {
