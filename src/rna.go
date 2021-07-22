@@ -90,6 +90,11 @@ type structGrafo struct {
     valor float64
 }
 
+type structFN struct {
+    id_neuro int32
+    valor float64
+}
+
 type structNeuronio struct {
   id int32
   camada enumCamadaNeuronio

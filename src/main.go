@@ -11,5 +11,6 @@ func main() {
   fmt.Println("adsfi")
 
   CarregaRede(1)
-
+  UpdateVariaveis(1)
+  
 }

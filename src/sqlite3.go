@@ -80,17 +80,50 @@ func CarregaRede( pIdRNA int ) bool {
   return true
 }
 
-func UpdateVariaveis () {
+func UpdateVariaveis (pIdRNA int) bool {
 //checa  conexao com o banco de dados
-conexao:=SQLite3_Conecta ()
+  conexao:=SQLite3_Conecta ()
 
-//realiza o select da base transacoes
+//realiza o select da base de variaveis
+  rowsFN, err5 := conexao.Query ( "SELECT id_neuro, valor FROM fn WHERE id_neuro IN (SELECT id FROM neuronio WHERE neuronio.id_rna="+strconv.Itoa(pIdRNA)+")" )
+  if err5 != nil {
+    panic(err5)
+    return false
+  }
+  defer rowsFN.Close()
+  fmt.Println ("-FN-----------------")
 
+//carrega o vinculo dos inputs: neuro orig e dst
+  var resultFN []structFN
+  tuplaFN := structFN{}
 
+  for rowsFN.Next() {
+
+    err6 := rowsFN.Scan( &tuplaFN.id_neuro, &tuplaFN.valor )
+    if err6 != nil {
+      panic(err6)
+      return false
+    }
+
+    resultFN = append(resultFN, tuplaFN)
+
+    fmt.Println ( "UPDATE neuronio SET valor_recebido=" + fmt.Sprint ( tuplaFN.valor ) + " WHERE id=" + strconv.Itoa ( int ( tuplaFN.id_neuro ) ) )
+
+    conexao.Query ( "UPDATE neuronio SET valor_recebido=" + fmt.Sprint ( tuplaFN.valor ) + " WHERE id=" + strconv.Itoa ( int ( tuplaFN.id_neuro ) ) )
+
+  }
+  /*
+  // Atualizando a data
+   tx, err := mydb.Begin()
+   checkErr(err)
+   //...
+   cmd := "UPDATE userinfo SET created = ? WHERE uid = ?"
+   updateDate, err := tx.Prepare(cmd)
+   checkErr(err)
+*/
 //fecha conexao
-conexao.Close()
-}
+  conexao.Close()
 
-func UpdateOutput () {
+  return true
 
 }
