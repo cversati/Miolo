@@ -177,7 +177,7 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
     char strSQL[256];
     memset (strSQL, '\x0', 256);
     char strIdRNA[3];
-    strcpy (strSQL, "SELECT neuronio.id,camada,limite_superior,limiar_superior,valor_referencia,limiar_inferior,limite_inferior,criterio,status,peso,funcao_processamento, funcao_ativacao FROM neuronio,neuro_rna WHERE neuro_rna.id_neuro=neuronio.id AND neuro_rna.id_rna=" );
+    strcpy (strSQL, "SELECT id, id_rna, camada,limite_superior,limiar_superior,valor_referencia,limiar_inferior,limite_inferior,criterio,status,peso,funcao_processamento,funcao_ativacao,valor_recebido FROM neuronio WHERE id_rna=" );
     sprintf(strIdRNA, "%d", id_rede);
     strcat (strSQL, strIdRNA);
 
@@ -189,7 +189,7 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
         PQfinish(conexao);
         return 1;
     }
-/*
+
     structNeuronio neuro;
 
     unsigned long int nr_tuplas = PQntuples ( retornoSelect );
@@ -197,20 +197,21 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
     while ( nr_tuplas-- )
     {
         neuro.id = atoi(PQgetvalue( retornoSelect, nr_tuplas, 0));
-        neuro.camada = (enumCamadaNeuronio) atoi(PQgetvalue(retornoSelect, nr_tuplas, 1));
-        neuro.segmentos.limiteSuperior = atof( PQgetvalue(retornoSelect, nr_tuplas, 2));
-        neuro.segmentos.limiarSuperior = atof( PQgetvalue(retornoSelect, nr_tuplas, 3));
-        neuro.segmentos.valorReferencia = atof (PQgetvalue(retornoSelect, nr_tuplas, 4));
-        neuro.segmentos.limiteInferior = atof (PQgetvalue(retornoSelect, nr_tuplas, 5));
+        neuro.id_rna = atoi(PQgetvalue( retornoSelect, nr_tuplas, 1));
+        neuro.camada = (enumCamadaNeuronio) atoi(PQgetvalue(retornoSelect, nr_tuplas, 2));
+        neuro.segmentos.limiteSuperior = atof( PQgetvalue(retornoSelect, nr_tuplas, 3));
+        neuro.segmentos.limiarSuperior = atof( PQgetvalue(retornoSelect, nr_tuplas, 4));
+        neuro.segmentos.valorReferencia = atof (PQgetvalue(retornoSelect, nr_tuplas, 5));
         neuro.segmentos.limiarInferior = atof (PQgetvalue(retornoSelect, nr_tuplas, 6));
-        neuro.criterio = (enumCriterio) atoi(PQgetvalue(retornoSelect, nr_tuplas, 7));
+        neuro.segmentos.limiteInferior = atof (PQgetvalue(retornoSelect, nr_tuplas, 7));
+        neuro.criterio = (enumCriterio) atoi(PQgetvalue(retornoSelect, nr_tuplas, 8));
         neuro.peso = atof (PQgetvalue(retornoSelect, nr_tuplas, 9));
-        neuro.status = (enumStatusNeuronio) atoi(PQgetvalue(retornoSelect, nr_tuplas, 8) );
-        neuro.funcaoCondensacao =  (enumFuncaoProcessamento) atoi(PQgetvalue(retornoSelect, nr_tuplas, 10) );
-        neuro.funcaoAtivacao = (enumFuncaoAtivacao)  atoi(PQgetvalue(retornoSelect, nr_tuplas, 11) );
+        neuro.status = (enumStatusNeuronio) atoi(PQgetvalue(retornoSelect, nr_tuplas, 10) );
+        neuro.funcaoCondensacao =  (enumFuncaoProcessamento) atoi(PQgetvalue(retornoSelect, nr_tuplas, 11) );
+        neuro.funcaoAtivacao = (enumFuncaoAtivacao)  atoi(PQgetvalue(retornoSelect, nr_tuplas, 12) );
+        neuro.valorRecebido = atof (PQgetvalue(retornoSelect, nr_tuplas, 13));
         rede->push_back(neuro);
     };
-
 
 //zera os inputs
     int n = rede->size();
@@ -218,7 +219,7 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
 
 //carrega o vinculo dos inputs: neuro orig e dst.
     memset (strSQL, '\x0', 256);
-    strcpy (strSQL, "SELECT id_neuro_dst,id_neuro_orig,valor FROM input_neuro WHERE id_neuro_dst IN (SELECT id_neuro FROM neuro_rna WHERE id_rna=" );
+    strcpy (strSQL, "SELECT id_neuro_dst,id_neuro_orig,valor FROM grafo WHERE id_rna=" );
     strcat (strSQL, strIdRNA);
     strcat (strSQL, ")");
 
@@ -230,7 +231,7 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
         PQfinish(conexao);
         return 1;
     }
-
+/*
     int idx_neuro_atual=-1;
     int idx_neuro_dst=0;
     int idx_input=0; //contador de inputs de um neuronio na struct inputs

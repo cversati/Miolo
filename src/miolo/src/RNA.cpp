@@ -1,5 +1,5 @@
 #include <iostream>
-#include "include/RNA.h"
+#include "RNA.h"
 
 using namespace std;
 unsigned short int RNA_LOG=1;

@@ -40,10 +40,11 @@ struct structInput
 struct structNeuronio
 {
     unsigned long int id;
+    unsigned long int id_rna;
     enumCamadaNeuronio camada;
     enumCriterio criterio; //area de sucesso na curva
     segmentosCurva segmentos; //valores da curva
-    float valorrecebido;
+    float valorRecebido;
     structInput inputs[NR_INPUTS];
     enumFuncaoProcessamento funcaoCondensacao; //Usada na entrada do neuronio intermediario e final
     enumFuncaoAtivacao funcaoAtivacao;//a pensar: funcao de ativacao: o valor so passa para a proxima camada se chegar ate um valor
