@@ -92,7 +92,6 @@ func UpdateVariaveis (pIdRNA int) bool {
   }
   defer rowsFN.Close()
   fmt.Println ("-FN-----------------")
-
 //carrega o vinculo dos inputs: neuro orig e dst
   var resultFN []structFN
   tuplaFN := structFN{}
@@ -104,15 +103,36 @@ func UpdateVariaveis (pIdRNA int) bool {
       panic(err6)
       return false
     }
+    fmt.Println (tuplaFN.id_neuro, tuplaFN.valor)
+    defer rowsFN.Close()
 
     resultFN = append(resultFN, tuplaFN)
+    sql := "UPDATE neuronio SET valor_recebido=" + strconv.FormatFloat(tuplaFN.valor, 'f', 3, 64) + " WHERE id=" + strconv.Itoa ( int ( tuplaFN.id_neuro ) )
+    fmt.Println ( sql)
+    stmt, err := conexao.Prepare (sql)
+    if err != nil {
+      panic(err.Error())
+    }
+    res, err := stmt.Exec()
+    res.RowsAffected()
 
-    fmt.Println ( "UPDATE neuronio SET valor_recebido=" + fmt.Sprint ( tuplaFN.valor ) + " WHERE id=" + strconv.Itoa ( int ( tuplaFN.id_neuro ) ) )
+//    stmt.Commit()
+/*
+    sql := "UPDATE neuronio SET valor_recebido=" + strconv.FormatFloat(tuplaFN.valor, 'f', 3, 64) + " WHERE id=" + strconv.Itoa ( int ( tuplaFN.id_neuro ) )
+    fmt.Println ( sql)
+    stmt, err := conexao.Prepare ("UPDATE neuronio SET valor_recebido=? WHERE id=?")
+    if err != nil {
+      panic(err.Error())
+    }
 
-    conexao.Query ( "UPDATE neuronio SET valor_recebido=" + fmt.Sprint ( tuplaFN.valor ) + " WHERE id=" + strconv.Itoa ( int ( tuplaFN.id_neuro ) ) )
-
+    res, err := stmt.Exec (strconv.FormatFloat(tuplaFN.valor, 'f', 3, 64), strconv.Itoa ( int ( tuplaFN.id_neuro ) ) )
+    if err != nil {
+      panic(err.Error())
+      fmt.Println(res)
+    }
+*/
   }
-  /*
+/*
   // Atualizando a data
    tx, err := mydb.Begin()
    checkErr(err)
@@ -122,6 +142,30 @@ func UpdateVariaveis (pIdRNA int) bool {
    checkErr(err)
 */
 //fecha conexao
+//realiza o select
+rowsNeuronio, err1 := conexao.Query ( "SELECT id,camada,limite_superior,limiar_superior,valor_referencia,limiar_inferior,limite_inferior,criterio,status,peso,funcao_processamento, funcao_ativacao,valor_recebido FROM neuronio WHERE id_rna=" + strconv.Itoa(pIdRNA) )
+if err1 != nil {
+  panic(err1)
+  return false
+}
+defer rowsNeuronio.Close()
+
+//carrega a matriz de structNeuronio (rede) com os registros
+var resultNeuronio []structNeuronio
+tuplaNeuronio := structNeuronio{}
+
+for rowsNeuronio.Next() {
+  err2 := rowsNeuronio.Scan(&tuplaNeuronio.id, &tuplaNeuronio.camada, &tuplaNeuronio.limiteSuperior, &tuplaNeuronio.limiarSuperior, &tuplaNeuronio.valorReferencia, &tuplaNeuronio.limiarInferior, &tuplaNeuronio.limiteInferior, &tuplaNeuronio.criterio, &tuplaNeuronio.status, &tuplaNeuronio.peso, &tuplaNeuronio.funcaoCondensacao, &tuplaNeuronio.funcaoAtivacao)
+  if err2 != nil {
+    panic(err2)
+    return false
+  }
+  resultNeuronio = append(resultNeuronio, tuplaNeuronio)
+  fmt.Println (tuplaNeuronio.id, tuplaNeuronio.valorRecebido, tuplaNeuronio.camada)
+}
+
+
+
   conexao.Close()
 
   return true

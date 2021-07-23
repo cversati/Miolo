@@ -80,7 +80,7 @@ type segmentosCurva struct {
 }
 
 type structInput struct {
-    valor float64
+    valor float32
     idxNeuronio int32 //id do neuronio de origem da informacao, se zero  = inativo
 }
 
@@ -110,6 +110,7 @@ type structNeuronio struct {
   peso float64
   output float64
   status enumStatusNeuronio
+  valorRecebido float64
 }
 
 
