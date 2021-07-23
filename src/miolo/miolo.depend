@@ -1,0 +1,44 @@
+# depslib dependency file v1.0
+1627071595 source:/home/versati/Projects/Miolo/src/miolo/main.cpp
+	<iostream>
+	"RNA.h"
+	"Neuronio.h"
+	"pd_pgsql.h"
+
+1627058721 /home/versati/Projects/Miolo/src/miolo/include/RNA.h
+	<vector>
+	"global.h"
+
+1627058414 /home/versati/Projects/Miolo/src/miolo/include/global.h
+
+1627058584 /home/versati/Projects/Miolo/src/miolo/include/Neuronio.h
+
+1627058873 /home/versati/Projects/Miolo/src/miolo/include/pd_pgsql.h
+	<vector>
+	"global.h"
+
+1627059369 source:/home/versati/Projects/Miolo/src/miolo/src/pd_pgsql.cpp
+	<iostream>
+	<vector>
+	<libpq-fe.h>
+	<string.h>
+	<stdlib.h>
+	<stdio.h>
+	<sys/time.h>
+	<sys/types.h>
+	<unistd.h>
+	<libpq-fe.h>
+	<errno.h>
+	"pd_pgsql.h"
+	"global.h"
+	"RNA.h"
+
+1620763835 /usr/include/postgresql/libpq-fe.h
+	<stdio.h>
+	"postgres_ext.h"
+
+1620763835 /usr/include/postgresql/postgres_ext.h
+	"pg_config_ext.h"
+
+1620763835 /usr/include/postgresql/pg_config_ext.h
+
