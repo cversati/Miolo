@@ -23,9 +23,13 @@ int getPosicaoLinear ( float ponto, segmentosCurva segmentos )
      if ( ponto < segmentos.limiteInferior ) return 7;
      return 0;
  }
-//    lim sup    threshold      vr      threshold          lim inf
-//  ----o------------o----------o------------o--------------o-------
-//   1       2           3      4      5           6            7
+/*--------------------------------------------------------------------
+Retorna 1 se o valor esta numa posicao na curva que atende o criterio
+
+    lim sup    threshold      vr      threshold          lim inf
+  ----o------------o----------o------------o--------------o-------
+   1       2           3      4      5           6            7
+---------------------------------------------------------------------*/
  int isAtendeCriterio ( int pPosicaoLinear, enumCriterio pCriterio )
  {
      int atende=0;
@@ -192,19 +196,26 @@ float sinapse(std::vector<structNeuronio> rede)
     unsigned short int qtde_outputs = 0;
 
     //calcula output dos neuronios de entrada
-    if (RNA_LOG) cout << endl << "Lendo as entradas";
 
     unsigned int n = rede.size();
+
+    if (!n)
+    {
+        cerr << "e#027 rede vazia" << endl;
+        return 0;
+    }
+
+    if (RNA_LOG) cout << endl << "rede " << rede.at(0).id_rna << " formada por " << n << " neuronios em processamento" << endl ;
+
     while (n--)
     {
-
         if ( ( rede.at(n).status == Ativo ) && (rede.at(n).camada == Entrada ) )
         {
             rede.at(n).output = (isAtendeCriterio( getPosicaoLinear(rede.at(n).inputs[0].valor, rede.at(n).segmentos), rede.at(n).criterio ) ? rede.at(n).peso : 0 );
-            if (RNA_LOG) cout << endl << "neuronio "<< rede.at(n).id << " input eh " << rede.at(n).inputs[0].valor;
+            if (RNA_LOG) cout << endl << "neuronio "<< rede.at(n).id << ": input eh " << rede.at(n).inputs[0].valor;
             if (RNA_LOG) cout << " posicao linear " << getPosicaoLinear(rede.at(n).inputs[0].valor, rede.at(n).segmentos);
-            if (RNA_LOG) cout << " Atende criterio ? " << isAtendeCriterio( getPosicaoLinear(rede.at(n).inputs[0].valor, rede.at(n).segmentos), rede.at(n).criterio );
             if (RNA_LOG) cout << " peso " << rede.at(n).peso;
+            if (RNA_LOG) cout << " e " << (isAtendeCriterio( getPosicaoLinear(rede.at(n).inputs[0].valor, rede.at(n).segmentos), rede.at(n).criterio ) ? "" : "nao" ) << " atende o criterio";
         }
     }
     if (RNA_LOG) cout << endl;

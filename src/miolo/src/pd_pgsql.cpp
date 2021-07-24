@@ -10,16 +10,14 @@
 #include <libpq-fe.h>
 #include <errno.h>
 
-
 #include "pd_pgsql.h"
 #include "global.h"
 #include "RNA.h"
 
 using namespace std;
 
-
 const char *conninfo =
-"host=localhost" \
+"host=localhost " \
 "dbname=rna " \
 "user=miolo " \
 "password=miolo";
@@ -47,8 +45,7 @@ const char *conninfo =
  * return:  0 - (re)connected OK
  *         -1 - failed to connect
  */
-int
-poll_for_connection(PGconn *conn, int reset)
+int poll_for_connection(PGconn *conn, int reset)
 {
 	PostgresPollingStatusType status;
 
@@ -127,6 +124,7 @@ PGconn* make_asynchronous_connection(void)
 
 	if (poll_for_connection(conn, 0))
 	{
+		cerr << "e#037 " << PQerrorMessage( conn ) << endl;
 		PQfinish(conn);
 		return NULL;
 	}
@@ -138,8 +136,8 @@ int reset_asynchronous_connection(PGconn *conn)
 {
 	if (!PQresetStart(conn))
 	{
-		PQfinish(conn);
 		cerr << "e#033 " << PQerrorMessage( conn ) << endl;
+		PQfinish(conn);
 		return -1;
 	}
 
@@ -154,6 +152,9 @@ int reset_asynchronous_connection(PGconn *conn)
 
 /*
 AQUI COMECA O MEU CODIGO
+*/
+/*
+Instancia na memoria a RNA
 */
 int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
 {
@@ -221,7 +222,6 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
     memset (strSQL, '\x0', 256);
     strcpy (strSQL, "SELECT id_neuro_dst,id_neuro_orig,valor FROM grafo WHERE id_rna=" );
     strcat (strSQL, strIdRNA);
-    strcat (strSQL, ")");
 
     retornoSelect = PQexec( conexao, strSQL );
 
@@ -231,7 +231,8 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
         PQfinish(conexao);
         return 1;
     }
-/*
+
+//prepara as matrizes de inputs zerando os registradores
     int idx_neuro_atual=-1;
     int idx_neuro_dst=0;
     int idx_input=0; //contador de inputs de um neuronio na struct inputs
@@ -249,7 +250,7 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
         rede->at(idx_neuro_atual).inputs[idx_input].idxNeuronio = atoi(PQgetvalue(retornoSelect, nr_tuplas, 1)); //origem
         rede->at(idx_neuro_atual).inputs[idx_input++].valor = atof(PQgetvalue(retornoSelect, nr_tuplas, 2)); //valor
     };
-*/
+
     PQfinish(conexao);
     return 1;
 }
@@ -259,6 +260,8 @@ Pega o campo da tabela neuronio indicativo da posicao do campo na tabela aquario
 */
 int updateVariaveisAmbiente(void)
 {
+//realiza a conexao
+
 	PGconn *conexao;
 	if ((conexao = make_asynchronous_connection()) == NULL)
 	{
@@ -273,9 +276,10 @@ int updateVariaveisAmbiente(void)
         PQfinish(conexao);
         return 0;
     }
-/*
 
-    PGresult *retornoSelectAmbiente = PQexec( conexao, "SELECT id, nome, temperatura_ambiente,luz_ligada,luz_qtde_24h,termostato_status,cor_da_luz,comida1_disp_24h,comida2_disp_24h,comida3_disp_24h,ph_indice,o2_indice,co2_indice FROM aquario" );
+// pegas as variaveis na tabela de registro pelo sistemas externos
+
+    PGresult *retornoSelectAmbiente = PQexec( conexao, "SELECT id_neuro, valor FROM fn WHERE id_neuro IN (SELECT id FROM neuronio WHERE neuronio.id_rna=1)" );
 
     if ( (!PQresultStatus(retornoSelectAmbiente)) || (PQresultStatus(retornoSelectAmbiente)==PGRES_EMPTY_QUERY) || (PQresultStatus(retornoSelectAmbiente)!=PGRES_TUPLES_OK) )
     {
@@ -283,7 +287,7 @@ int updateVariaveisAmbiente(void)
         PQfinish(conexao);
         return 1;
     }
-
+/*
     PGresult *retornoSelectNeuronio = PQexec( conexao, "SELECT id,idx_campo_origem FROM neuronio WHERE camada = 0" );
 
 
@@ -293,21 +297,23 @@ int updateVariaveisAmbiente(void)
         PQfinish(conexao);
         return 1;
     }
+*/
+// armazena a qtde de neuronios a serem atualizados
+    unsigned long int nr_tuplas = PQntuples ( retornoSelectAmbiente );
 
-    unsigned long int nr_tuplas = PQntuples ( retornoSelectNeuronio );
-
+// cria variavel para registrar o SQL de update do campo valor recebido
     char strSQL[100];
     memset (strSQL, '\x0', 100);
     unsigned long int posicao_campo_TabAquario=0;
 
     while ( nr_tuplas-- ){
 
-        posicao_campo_TabAquario = atoi(PQgetvalue( retornoSelectNeuronio, nr_tuplas, 1)); //a posicao da coluna na tabela aquario (ref variavel ambiente)
+//        posicao_campo_TabAquario = atoi(PQgetvalue( retornoSelectNeuronio, nr_tuplas, 1)); //a posicao da coluna na tabela aquario (ref variavel ambiente)
 
-        strcpy (strSQL, "UPDATE input_neuro SET valor=" );
-        strcat (strSQL, PQgetvalue(retornoSelectAmbiente,0, posicao_campo_TabAquario)); //valor variavel ambiente
-        strcat (strSQL, " WHERE id_neuro_orig=");
-        strcat (strSQL, PQgetvalue( retornoSelectNeuronio, nr_tuplas, 0 )); //id do neuronio
+        strcpy (strSQL, "UPDATE neuronio SET valor_recebido=" );
+        strcat (strSQL, PQgetvalue(retornoSelectAmbiente,nr_tuplas, 1)); //valor variavel ambiente
+        strcat (strSQL, " WHERE id=");
+        strcat (strSQL, PQgetvalue( retornoSelectAmbiente, nr_tuplas, 0 )); //id do neuronio
 
         if (PQresultStatus(PQexec (conexao, strSQL)) != PGRES_COMMAND_OK)
         {
@@ -316,11 +322,18 @@ int updateVariaveisAmbiente(void)
             return 0;
         }
     };
-*/
+
     PQfinish(conexao);
     return 1;
 }
 
+/*
+Grava a recomendacao
+
+Parametros:
+id da RNA
+valor calculado
+*/
 int updateOutput(unsigned int id, float valor)
 {
 	PGconn *conexao;
