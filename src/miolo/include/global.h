@@ -37,7 +37,8 @@ struct segmentosCurva
 struct structInput
 {
     float valor;
-    short int idxNeuronio; //id do neuronio de origem da informacao, se zero  = inativo
+    short int id_neuro_orig; //id do neuronio de origem da informacao, se zero  = camada de entrada, se -1 = input inativo
+    short int id_neuro_dst;
 };
 struct structNeuronio
 {
