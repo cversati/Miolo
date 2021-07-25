@@ -1,8 +1,9 @@
 #include <iostream>
 #include "RNA.h"
+#include "global.h"
 
 using namespace std;
-unsigned short int RNA_LOG=1;
+
 /*
 1-acima do limite superior
 2-no limite superior

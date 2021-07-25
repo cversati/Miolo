@@ -55,7 +55,7 @@ int poll_for_connection(PGconn *conn, int reset)
 	/* check for conn status */
 	if (PQstatus(conn) == CONNECTION_BAD)
 	{
-		fprintf(stderr, "Asynchronous connection failed...\n");
+		fprintf(stderr, "e#002 Asynchronous connection failed...\n");
 		return -1;
 	}
 
@@ -103,7 +103,7 @@ int poll_for_connection(PGconn *conn, int reset)
 	/* check if our connection failed */
 	if (status == PGRES_POLLING_FAILED)
 	{
-		printf("failed\n");
+		printf("e#002 failed\n");
 		return -1;
 	}
 
@@ -124,7 +124,7 @@ PGconn* make_asynchronous_connection(void)
 
 	if (poll_for_connection(conn, 0))
 	{
-		cerr << "e#037 " << PQerrorMessage( conn ) << endl;
+		cerr << "e#003 " << PQerrorMessage( conn ) << endl;
 		PQfinish(conn);
 		return NULL;
 	}
@@ -136,7 +136,7 @@ int reset_asynchronous_connection(PGconn *conn)
 {
 	if (!PQresetStart(conn))
 	{
-		cerr << "e#033 " << PQerrorMessage( conn ) << endl;
+		cerr << "e#004 " << PQerrorMessage( conn ) << endl;
 		PQfinish(conn);
 		return -1;
 	}
@@ -158,19 +158,19 @@ Instancia na memoria a RNA
 */
 int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
 {
+    if (RNA_LOG) cout << endl << "l#001 " << "iniciando do carregamento da rna " << id_rede << endl;
     rede->clear();
 
 	PGconn *conexao;
 	if ((conexao = make_asynchronous_connection()) == NULL)
 	{
-        cerr << "e#030 " << PQerrorMessage(conexao) << endl;
+        cerr << "e#005 " << PQerrorMessage(conexao) << endl;
         PQfinish(conexao);
         return 0;
 	}
-
     if ( (PQstatus(conexao) == CONNECTION_BAD) )
     {
-        cerr << "e#010 " << PQerrorMessage(conexao) << endl;
+        cerr << "e#006 " << PQerrorMessage(conexao) << endl;
         PQfinish(conexao);
         return 0;
     }
@@ -178,22 +178,26 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
     char strSQL[256];
     memset (strSQL, '\x0', 256);
     char strIdRNA[3];
-    strcpy (strSQL, "SELECT id, id_rna, camada,limite_superior,limiar_superior,valor_referencia,limiar_inferior,limite_inferior,criterio,status,peso,funcao_processamento,funcao_ativacao,valor_recebido FROM neuronio WHERE id_rna=" );
+    strcpy (strSQL, "SELECT id,id_rna,camada,limite_superior,limiar_superior,valor_referencia,limiar_inferior,limite_inferior,criterio,status,peso,funcao_processamento,funcao_ativacao,valor_recebido FROM neuronio WHERE id_rna=" );
     sprintf(strIdRNA, "%d", id_rede);
     strcat (strSQL, strIdRNA);
-
+// recupera da base a rna
+    if (RNA_LOG) cout << "s#001 " << strSQL << endl;
     PGresult *retornoSelect = PQexec( conexao, strSQL );
 
     if ( (!PQresultStatus(retornoSelect )) || (PQresultStatus(retornoSelect ) == PGRES_EMPTY_QUERY) || (PQresultStatus(retornoSelect ) != PGRES_TUPLES_OK) )
     {
-        cerr << "e#012 " << PQerrorMessage(conexao) << endl;
+        cerr << "e#007 " << PQerrorMessage(conexao) << endl;
         PQfinish(conexao);
         return 1;
     }
+// armazena numa estrutura em memoria a rna
+    if (RNA_LOG) cout << "l#002 " << "instanciando a rna " << id_rede << " em memoria" << endl;
 
     structNeuronio neuro;
 
     unsigned long int nr_tuplas = PQntuples ( retornoSelect );
+    if (RNA_LOG) cout << "l#003 " << "armazenando " << nr_tuplas << " neuronios" << endl;
 
     while ( nr_tuplas-- )
     {
@@ -216,39 +220,48 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
 
 //zera os inputs
     int n = rede->size();
+    if (RNA_LOG) cout << "l#004 " << n << " neuronios impostados na matriz RNA" << endl;
     while (n--) for (int k=NR_INPUTS; k;) rede->at(n).inputs[--k].idxNeuronio = 0;
 
 //carrega o vinculo dos inputs: neuro orig e dst.
+    if (RNA_LOG) cout << "l#005 " << "iniciando carregamento do grafo da rna" << endl;
     memset (strSQL, '\x0', 256);
     strcpy (strSQL, "SELECT id_neuro_dst,id_neuro_orig,valor FROM grafo WHERE id_rna=" );
     strcat (strSQL, strIdRNA);
 
+    if (RNA_LOG) cout << "s#002 " << strSQL << endl;
     retornoSelect = PQexec( conexao, strSQL );
 
     if ( ( !PQresultStatus(retornoSelect ) ) || ( PQresultStatus(retornoSelect ) == PGRES_EMPTY_QUERY ) || ( PQresultStatus(retornoSelect ) != PGRES_TUPLES_OK ) )
     {
-        cerr << "e#023 " << PQerrorMessage(conexao) << endl;
+        cerr << "e#008 " << PQerrorMessage(conexao) << endl;
         PQfinish(conexao);
         return 1;
     }
 
-//prepara as matrizes de inputs zerando os registradores
+//prepara as matrizes de inputs
     int idx_neuro_atual=-1;
     int idx_neuro_dst=0;
     int idx_input=0; //contador de inputs de um neuronio na struct inputs
 
     nr_tuplas = PQntuples ( retornoSelect );
+    if (RNA_LOG) cout << "l#006 " << "grafo formado por " << nr_tuplas << " vertices" << endl;
 
     while ( nr_tuplas-- )
     {
         idx_neuro_dst =  getIdxVectorByIdxNeuronio( atoi(PQgetvalue(retornoSelect, nr_tuplas, 0)), *rede ); //obtem a posicao no vector do neuronio destino com seu id recuperado da tabela de vinculos
+       //zerando os registradores
         if ( idx_neuro_atual != idx_neuro_dst ) //se for uma posicao valida no vector
         {
             idx_input = 0; //zera o contador
             idx_neuro_atual = idx_neuro_dst; //atualiza o vector de inputs
         }
+        //alimenta os registradores
         rede->at(idx_neuro_atual).inputs[idx_input].idxNeuronio = atoi(PQgetvalue(retornoSelect, nr_tuplas, 1)); //origem
         rede->at(idx_neuro_atual).inputs[idx_input++].valor = atof(PQgetvalue(retornoSelect, nr_tuplas, 2)); //valor
+        cout << "l#008 " << rede->at(idx_neuro_atual).inputs[idx_input].idxNeuronio << endl;
+        cout << "l#007 " << "vertice: id " << PQgetvalue(retornoSelect, nr_tuplas, 1) << " -> " << PQgetvalue(retornoSelect, nr_tuplas, 0) << " : " << PQgetvalue(retornoSelect, nr_tuplas, 2) << endl;
+        //cout << "valor do input " << rede->at(idx_neuro_atual).inputs[idx_input].idxNeuronio << " : " << rede->at(idx_neuro_atual).inputs[idx_input].valor;
     };
 
     PQfinish(conexao);
@@ -287,6 +300,8 @@ int updateVariaveisAmbiente(void)
         PQfinish(conexao);
         return 1;
     }
+
+// insere os valores nos registradores de inputs da camada de entrada
 /*
     PGresult *retornoSelectNeuronio = PQexec( conexao, "SELECT id,idx_campo_origem FROM neuronio WHERE camada = 0" );
 
@@ -304,16 +319,15 @@ int updateVariaveisAmbiente(void)
 // cria variavel para registrar o SQL de update do campo valor recebido
     char strSQL[100];
     memset (strSQL, '\x0', 100);
-    unsigned long int posicao_campo_TabAquario=0;
+//    unsigned long int posicao_campo_TabAquario=0;
 
     while ( nr_tuplas-- ){
-
-//        posicao_campo_TabAquario = atoi(PQgetvalue( retornoSelectNeuronio, nr_tuplas, 1)); //a posicao da coluna na tabela aquario (ref variavel ambiente)
-
-        strcpy (strSQL, "UPDATE neuronio SET valor_recebido=" );
+        //persiste na tabela de grafos os valores das variaveis de ambiente
+        strcpy (strSQL, "UPDATE grafo SET valor=" );
         strcat (strSQL, PQgetvalue(retornoSelectAmbiente,nr_tuplas, 1)); //valor variavel ambiente
-        strcat (strSQL, " WHERE id=");
+        strcat (strSQL, " WHERE id_neuro_orig=");
         strcat (strSQL, PQgetvalue( retornoSelectAmbiente, nr_tuplas, 0 )); //id do neuronio
+        cout << strSQL << endl;
 
         if (PQresultStatus(PQexec (conexao, strSQL)) != PGRES_COMMAND_OK)
         {

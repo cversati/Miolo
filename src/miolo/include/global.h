@@ -1,6 +1,8 @@
 #ifndef GLOBAL_H_INCLUDED
 #define GLOBAL_H_INCLUDED
 
+const unsigned short int RNA_LOG = 1;
+
 //ref neuronio
 const unsigned short int NR_INPUTS = 3;
 enum enumStatusNeuronio { Ativo = 1, Inativo = 0};
