@@ -292,7 +292,7 @@ Pega o campo da tabela neuronio indicativo da posicao do campo na tabela aquario
 */
 int updateVariaveisAmbiente(void)
 {
-    if (RNA_LOG) cout << "l#008 capturando as variaveis de ambiente" << endl;
+    if (RNA_LOG) cout << endl << "l#008 capturando as variaveis de ambiente" << endl;
 //realiza a conexao
 
 	PGconn *conexao;
@@ -327,7 +327,6 @@ int updateVariaveisAmbiente(void)
 // cria variavel para registrar o SQL de update do campo valor recebido
     char strSQL[100];
     memset (strSQL, '\x0', 100);
-//    unsigned long int posicao_campo_TabAquario=0;
 
     while ( nr_tuplas-- ){
         //persiste na tabela de grafos os valores das variaveis de ambiente
@@ -385,3 +384,98 @@ int updateOutput(unsigned int id, float valor)
     return 1;
 }
 
+
+/*
+calibragem
+*/
+
+int calibrarTodos(unsigned short int idCliente)
+{
+    if (RNA_LOG) cout << "l#019 " << "calibrando..." << endl;
+
+//realiza a conexao
+
+	PGconn *conexao;
+	if ((conexao = make_asynchronous_connection()) == NULL)
+	{
+        cerr << "e#009 " << PQerrorMessage(conexao) << endl;
+        PQfinish(conexao);
+        return 0;
+	}
+
+    if ( (PQstatus(conexao) == CONNECTION_BAD) )
+    {
+        cerr << "e#010 " << PQerrorMessage(conexao) << endl;
+        PQfinish(conexao);
+        return 0;
+    }
+
+    PGresult *retornoSelect;
+    char strSQL[100];
+    memset (strSQL, '\x0', 100);
+    char strIdCliente[3];
+    sprintf(strIdCliente, "%d", idCliente);
+
+    /*
+    item 001 - valor medio dos TEDs (id transacao = 2)
+    Neuronio 001
+    */
+
+    strcpy (strSQL, "SELECT AVG(valor) FROM transacoes WHERE id_transacao=2 AND id_cliente=" );
+    strcat (strSQL, strIdCliente); //valor variavel ambiente
+    if (RNA_LOG) cout << "s#006 " << strSQL << endl;
+    retornoSelect = PQexec( conexao, strSQL );
+
+    if ( (!PQresultStatus(retornoSelect)) || (PQresultStatus(retornoSelect)==PGRES_EMPTY_QUERY) || (PQresultStatus(retornoSelect)!=PGRES_TUPLES_OK) )
+    {
+        cerr << "s#004 " << PQerrorMessage(conexao) << endl;
+        PQfinish(conexao);
+        return 1;
+    }
+
+    //persiste na tabela
+    strcpy (strSQL, "UPDATE fn SET valor=" );
+    strcat (strSQL, ( PQgetisnull(retornoSelect,0,0) ? "-1" : PQgetvalue(retornoSelect,0, 0 ) ) ); //valor variavel ambiente
+    strcat (strSQL, " WHERE id_neuro=1");
+
+    if (RNA_LOG) cout << "s#005 " << strSQL << endl;
+
+    if (PQresultStatus(PQexec (conexao, strSQL)) != PGRES_COMMAND_OK)
+    {
+        cerr << "e#015 " << PQerrorMessage(conexao) << endl;
+        PQfinish(conexao);
+        return 0;
+    }
+
+    /*
+    item 002 - valor da ultima transacao
+    Neuronio 002
+    */
+    strcpy (strSQL, "select valor from transacoes where id_cliente=");
+    strcat (strSQL, strIdCliente); //valor variavel ambiente
+    strcat (strSQL, " order by ts desc limit 1" );
+    if (RNA_LOG) cout << "s#007 " << strSQL << endl;
+    retornoSelect = PQexec( conexao, strSQL );
+
+    if ( (!PQresultStatus(retornoSelect)) || (PQresultStatus(retornoSelect)==PGRES_EMPTY_QUERY) || (PQresultStatus(retornoSelect)!=PGRES_TUPLES_OK) )
+    {
+        cerr << "e#016 " << PQerrorMessage(conexao) << endl;
+        PQfinish(conexao);
+        return 1;
+    }
+
+ //persiste na tabela
+    strcpy (strSQL, "UPDATE fn SET valor=" );
+    strcat (strSQL, PQgetvalue(retornoSelect,0, 0 ) );
+    strcat (strSQL, " WHERE id_neuro=2");
+    if (RNA_LOG) cout << "s#008 " << strSQL << endl;
+    if (PQresultStatus(PQexec (conexao, strSQL)) != PGRES_COMMAND_OK)
+    {
+        cerr << "e#017 " << PQerrorMessage(conexao) << endl;
+        PQfinish(conexao);
+        return 0;
+    }
+
+    PQfinish(conexao);
+    return 1;
+}

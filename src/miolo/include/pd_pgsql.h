@@ -6,4 +6,5 @@
 int updateVariaveisAmbiente(void);
 int updateOutput(unsigned int id, float valor);
 int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede);
+int calibrarTodos(unsigned short int);
 #endif // PD_PGSQL_H

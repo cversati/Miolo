@@ -1,7 +1,6 @@
 #ifndef NEURONIO_H
 #define NEURONIO_H
 
-
 class Neuronio
 {
     public:
