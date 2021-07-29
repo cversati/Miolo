@@ -44,10 +44,12 @@
 		<Unit filename="include/RNA.h" />
 		<Unit filename="include/cliente.h" />
 		<Unit filename="include/global.h" />
+		<Unit filename="include/item.h" />
 		<Unit filename="include/pd_pgsql.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="src/RNA.cpp" />
 		<Unit filename="src/cliente.cpp" />
+		<Unit filename="src/item.cpp" />
 		<Unit filename="src/pd_pgsql.cpp" />
 		<Extensions />
 	</Project>

@@ -411,7 +411,7 @@ int calibrarTodos(unsigned short int idCliente)
     }
 
     PGresult *retornoSelect;
-    char strSQL[100];
+    char strSQL[200];
     memset (strSQL, '\x0', 100);
     char strIdCliente[3];
     sprintf(strIdCliente, "%d", idCliente);
@@ -433,19 +433,7 @@ int calibrarTodos(unsigned short int idCliente)
         return 1;
     }
 
-    //persiste na tabela
-    strcpy (strSQL, "UPDATE fn SET valor=" );
-    strcat (strSQL, ( PQgetisnull(retornoSelect,0,0) ? "-1" : PQgetvalue(retornoSelect,0, 0 ) ) ); //valor variavel ambiente
-    strcat (strSQL, " WHERE id_neuro=1");
-
-    if (RNA_LOG) cout << "s#005 " << strSQL << endl;
-
-    if (PQresultStatus(PQexec (conexao, strSQL)) != PGRES_COMMAND_OK)
-    {
-        cerr << "e#015 " << PQerrorMessage(conexao) << endl;
-        PQfinish(conexao);
-        return 0;
-    }
+    gravaNaTabelaFN ( 1, ( PQgetisnull(retornoSelect,0,0) ? "-1" : PQgetvalue(retornoSelect,0, 0 ) ) );
 
     /*
     item 002 - valor da ultima transacao
@@ -463,15 +451,64 @@ int calibrarTodos(unsigned short int idCliente)
         PQfinish(conexao);
         return 1;
     }
+    gravaNaTabelaFN ( 2, ( PQgetisnull(retornoSelect,0,0) ? "-1" : PQgetvalue(retornoSelect,0, 0 ) ) );
 
- //persiste na tabela
-    strcpy (strSQL, "UPDATE fn SET valor=" );
-    strcat (strSQL, PQgetvalue(retornoSelect,0, 0 ) );
-    strcat (strSQL, " WHERE id_neuro=2");
-    if (RNA_LOG) cout << "s#008 " << strSQL << endl;
+    /*
+    item 003 - qtde de TED já realizados para o ultimo CPF que transacionou com o cliente nos ultimos 180 dias
+    Neuronio 003
+    */
+    if (RNA_LOG) cout << "l#022 " << "gravando na tabela FN a qtde de TED para o ultimo CPF que transacionou nos ultimos 180 dias" << endl;
+    strcpy (strSQL, "update fn set valor = (select count(id_dst) from transacoes where id_dst=(select id_dst from transacoes order by ts desc limit 1)) where id_neuro=3");
+    if (RNA_LOG) cout << "s#010 " << strSQL << endl;
+
     if (PQresultStatus(PQexec (conexao, strSQL)) != PGRES_COMMAND_OK)
     {
-        cerr << "e#017 " << PQerrorMessage(conexao) << endl;
+        cerr << "e#020 " << PQerrorMessage(conexao) << endl;
+        PQfinish(conexao);
+        return 0;
+    }
+
+    PQfinish(conexao);
+    return 1;
+}
+
+int gravaNaTabelaFN ( unsigned short int pIdNeuro, const char* pStrValor)
+{
+    if (RNA_LOG) cout << "l#020 " << "gravando na tabela FN valor ";
+
+//realiza a conexao
+
+	PGconn *conexao;
+	if ((conexao = make_asynchronous_connection()) == NULL)
+	{
+        cerr << "e#018 " << PQerrorMessage(conexao) << endl;
+        PQfinish(conexao);
+        return 0;
+	}
+
+    if ( (PQstatus(conexao) == CONNECTION_BAD) )
+    {
+        cerr << "e#019 " << PQerrorMessage(conexao) << endl;
+        PQfinish(conexao);
+        return 0;
+    }
+
+    char strSQL[100];
+    memset (strSQL, '\x0', 100);
+    char strIdNeuro[3];
+    sprintf(strIdNeuro, "%d", pIdNeuro);
+    if (RNA_LOG) cout << pStrValor << " no id neuro "  << pIdNeuro << endl;
+
+     //persiste na tabela
+    strcpy (strSQL, "UPDATE fn SET valor=" );
+    strcat (strSQL, pStrValor );
+    strcat (strSQL, " WHERE id_neuro=" );
+    strcat (strSQL, strIdNeuro );
+
+    if (RNA_LOG) cout << "s#009 " << strSQL << endl;
+    if (PQresultStatus(PQexec (conexao, strSQL)) != PGRES_COMMAND_OK)
+    {
+        cerr << "e#020 " << PQerrorMessage(conexao) << endl;
         PQfinish(conexao);
         return 0;
     }

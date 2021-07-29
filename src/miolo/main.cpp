@@ -1,8 +1,8 @@
 /*
 contador numeradores de logs (l=log informativo s=sql e=msg erros
-l 19
-s 8
-e 17
+l 22
+s 10
+e 20
 esses sao os numeros da ultima msg (usar o proximo nr)
 */
 
