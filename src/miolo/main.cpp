@@ -1,7 +1,7 @@
 /*
 contador numeradores de logs (l=log informativo s=sql e=msg erros
 l 22
-s 10
+s 11
 e 20
 esses sao os numeros da ultima msg (usar o proximo nr)
 */
@@ -20,9 +20,9 @@ int main()
 {
     cout << "-------------- Miolo --------------" << endl << endl;
 
-    calibrarTodos(1);
-
     updateVariaveisAmbiente();
+
+    calibrarTodos(1);
 
     cliente1 = new cliente();
     carrega_rna(&cliente1->rede,1);

@@ -12,18 +12,18 @@ enum enumFuncaoAtivacao {rnaFA_um, rnaFA_sempre, rnaFA_entre, rnaFA_zero};
 enum enumFuncaoProcessamento {rnaFP_MediaSimples = 1, rnaFP_MediaPonderada = 2, rnaFP_Somatoria = 3, rnaFP_Conjucao = 4, rnaFP_Disjucao = 5, rnaFP_Condicional = 6, rnaFP_Bicodicional = 7, rnaFP_XOR = 8, rnaFP_NOR = 9 };
 //                                                                                                  111/101/011/000     111/100/010/000     111/100/011/001         111/100/010/001        110/101/011/000 110/100/010/001
 /*Pontuacao:
-0.rnaPontua_ALS   PontuaAcimaLimiteSuperior
-1.rnaPontua_ELSTS Entre LimiteSuperior e Threshold superior
-2.rnaPontua_ELSVR Entre Threshold Superior e Valor Referencia
-3.rnaPontua_VR    No valor de referencia
-4.rnaPontua_EVRTI Entre Threshold Inferior e Valor Referencia
+0.rnaPontua_ALS    PontuaAcimaLimiteSuperior
+1.rnaPontua_ELSTS  Entre LimiteSuperior e Threshold superior
+2.rnaPontua_ELSVR  Entre Threshold Superior e Valor Referencia
+3.rnaPontua_VR     No valor de referencia
+4.rnaPontua_EVRTI  Entre Threshold Inferior e Valor Referencia
 5.rnaPontua_ETILI  Entre LimiteInferior e Threshold inferior
-6.rnaPontua_ALI   PontuaAbaixoLimiteInferior
-7.rnaPontua_ALSLI Pontua acima do limites superior até o limite inferior
+6.rnaPontua_ALI    PontuaAbaixoLimiteInferior
+7.rnaPontua_ALSLI  Pontua acima do limites superior até o limite inferior
 8.rnaPontua_ETSTI  Pontua entre o Threshold superior e o inferior
 9.rnaPontua_ELSLI  Pontua entre o limite superior e o inferior
 10.rnaPontua_FTSTI Pontua fora dos Threshold superior e o inferior
-11.rnaPontua_NVR    Pontua quando nao eh o valor VR
+11.rnaPontua_NVR   Pontua quando nao eh o valor VR
 12.rnaPontua_ELITS Pontua entre limite inferior e Threshold superior (util em curva logaritmica)*/
 enum enumCriterio {rnaPontua_ALS,rnaPontua_ELSTS,rnaPontua_ELSVR,rnaPontua_VR,rnaPontua_EVRTI,rnaPontua_ETILI,rnaPontua_ALI,rnaPontua_ALSLI,rnaPontua_ETSTI,rnaPontua_ELSLI,rnaPontua_FTSTI,rnaPontua_NVR,rnaPontua_ELITS};
 struct segmentosCurva
@@ -55,4 +55,17 @@ struct structNeuronio
     float output;
     enumStatusNeuronio status;
 };
+
+enum enumCdTransacoes {
+TRANS_DEP_A_VISTA       = 1,
+TRANS_SAQUE_ATM_PROPRIO = 2,
+TRANS_SAQUE_ATM_BCO24H  = 3,
+TRANS_TED               = 4,
+TRANS_PIX               = 5,
+TRANS_TRANSF_DBT        = 6,
+TRANS_TRANSF_CRED       = 7,
+TRANS_PGTO_BOLETO       = 8
+};
+
+
 #endif // GLOBAL_H_INCLUDED

@@ -31,7 +31,22 @@ Retorna 1 se o valor esta numa posicao na curva que atende o criterio
   ----o------------o----------o------------o--------------o-------
    1       2           3      4      5           6            7
 ---------------------------------------------------------------------*/
- int isAtendeCriterio ( int pPosicaoLinear, enumCriterio pCriterio )
+
+char* getStringPosicaoLinear ( int pPonto )
+{
+    switch ( pPonto )
+    {
+        case 1: return "acima do limite superior";
+        case 2: return "entre limite superior e o limiar superior";
+        case 3: return "entre limiar superior e o valor de referencia";
+        case 4: return "valor de referencia";
+        case 5: return "entre valor referencia e limiar inferior";
+        case 6: return "entre o limiar inferior e limite inferior";
+        case 7: return "abaixo do limite inferior";
+    }
+}
+
+int isAtendeCriterio ( int pPosicaoLinear, enumCriterio pCriterio )
  {
      int atende=0;
      switch (pPosicaoLinear)
@@ -78,30 +93,42 @@ void processaCamadaIntermediaria(std::vector<structNeuronio> *rede, enumCamadaNe
     int n = rede->size();
     int proposicao1 = 0;
     int proposicao2 = 0;
+
     while (n--)
     {
-        if ( ( rede->at(n).status == Ativo ) && ( rede->at(n).camada == camada ) ) //pega o neuronio daquela camada intermediaria
+
+// pega os neuronios por camada intermediaria começando da 1
+        if ( ( rede->at(n).status == Ativo ) && ( rede->at(n).camada == camada ) )
         {
             if (RNA_LOG) cout << "l#012 " << "processa a camada #" << camada << endl;
             ttl_outputs = 0;
             qtde_outputs = 0;
             k = NR_INPUTS;
             if (RNA_LOG) cout << "neuronio intermediario " << rede->at(n).id << endl;
+// processas os inputs do neuronio
             switch ( rede->at(n).funcaoCondensacao )
             {
             case rnaFP_MediaSimples:
+// checa todos os campos de inputs configurados (k = constante NR_INPUTS) para ver se tem valor
                while (k--)
                {
                     if (rede->at(n).inputs[k].id_neuro_orig > 0 )
                     {
-                        idx_vector=getIdxVectorByIdxNeuronio(rede->at(n).inputs[k].id_neuro_dst,*rede);
-                        if (RNA_LOG) cout << "l#013 " << "output do neuronio " << rede->at(n).inputs[k].id_neuro_orig << " : "  << rede->at(idx_vector).output << endl;
+                        idx_vector = getIdxVectorByIdxNeuronio ( rede->at(n).inputs[k].id_neuro_dst, *rede );
+                        if (RNA_LOG) cout << "l#013 " << k << "output do neuronio " << rede->at(n).inputs[k].id_neuro_orig << " : "  << rede->at(idx_vector).output << endl;
+// soma os inputs
+                        cout << endl << "$$$ " << rede->at(idx_vector).output  << "$$$ " <<  endl;
                         ttl_outputs += rede->at(idx_vector).output;
+// contador de inputs
                         qtde_outputs++;
                     }
                 }
-                ttl_outputs = ( (qtde_outputs) ? ttl_outputs/qtde_outputs : 0 ); //recurso para nao dar divisao por zero
-                rede->at(n).output = ( (ttl_outputs>1) ? 1 : ttl_outputs ); //recurso para nao dar divisao por zero
+// recurso para nao dar divisao por zero
+                ttl_outputs = ( (qtde_outputs) ? ttl_outputs/qtde_outputs : 0 );
+// executa a funcao de saida
+                rede->at(n).output = formataSaidaNeuronio ( rede->at(n).funcaoAtivacao, ttl_outputs );
+// registra 1 ou o valor entre 0 e 1
+                //rede->at(n).output = ( (ttl_outputs>1) ? 1 : ttl_outputs );
                 if (RNA_LOG) cout << "l#014 " << "saida do intermediario : " << rede->at(n).output << endl;
                 break;
             case rnaFP_MediaPonderada:
@@ -219,10 +246,10 @@ float sinapse(std::vector<structNeuronio> rede)
         {
             rede.at(n).output = (isAtendeCriterio( getPosicaoLinear(rede.at(n).inputs[0].valor, rede.at(n).segmentos), rede.at(n).criterio ) ? rede.at(n).peso : 0 );
             if (RNA_LOG) cout << "l#003 " << "neuronio " << rede.at(n).id << " com input " << rede.at(n).inputs[0].valor;
-            if (RNA_LOG) cout << " na posicao linear " << getPosicaoLinear(rede.at(n).inputs[0].valor, rede.at(n).segmentos);
+            if (RNA_LOG) cout << " na posicao linear " << getStringPosicaoLinear ( getPosicaoLinear(rede.at(n).inputs[0].valor, rede.at(n).segmentos) );
             if (RNA_LOG) cout << " e peso " << rede.at(n).peso;
             if (RNA_LOG) cout << " e " << (isAtendeCriterio( getPosicaoLinear(rede.at(n).inputs[0].valor, rede.at(n).segmentos), rede.at(n).criterio ) ? "" : "nao" ) << " atende o criterio";
-            if (RNA_LOG) cout << " resultado passado para a proxima camada: " << rede.at(n).output << endl;
+            if (RNA_LOG) cout << " e o resultado passado para a proxima camada eh " << rede.at(n).output << endl;
 
         }
     }
@@ -258,4 +285,25 @@ float sinapse(std::vector<structNeuronio> rede)
     }
 
     return ttl_outputs;
+}
+
+float formataSaidaNeuronio(enumFuncaoAtivacao pFuncao, float pValor)
+{
+    switch ( pFuncao )
+    {
+        case rnaFA_entre:
+            if ( ( pValor < 1) && ( pValor > 0 ) ) return pValor;
+
+        case rnaFA_sempre:
+            return pValor;
+
+        case rnaFA_um:
+            if ( pValor == 1) return 1;
+
+        case rnaFA_zero:
+            if ( pValor == 0) return 1;
+
+    }
+
+    return 0;
 }

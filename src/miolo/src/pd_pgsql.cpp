@@ -158,7 +158,7 @@ Instancia na memoria a RNA
 */
 int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
 {
-    if (RNA_LOG) cout << endl << "l#001 " << "iniciando do carregamento da rna " << id_rede << endl;
+    if (RNA_LOG) cout << endl << "l#001 " << "iniciando o carregamento da rna #" << id_rede << endl;
     rede->clear();
 
 	PGconn *conexao;
@@ -175,13 +175,14 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
         return 0;
     }
 
+// recupera da base a rna
     char strSQL[256];
     memset (strSQL, '\x0', 256);
     char strIdRNA[3];
     strcpy (strSQL, "SELECT id,id_rna,camada,limite_superior,limiar_superior,valor_referencia,limiar_inferior,limite_inferior,criterio,status,peso,funcao_processamento,funcao_ativacao,valor_recebido FROM neuronio WHERE id_rna=" );
     sprintf(strIdRNA, "%d", id_rede);
     strcat (strSQL, strIdRNA);
-// recupera da base a rna
+
     if (RNA_LOG) cout << "s#001 " << strSQL << endl;
     PGresult *retornoSelect = PQexec( conexao, strSQL );
 
@@ -191,6 +192,7 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
         PQfinish(conexao);
         return 0;
     }
+
 // armazena numa estrutura em memoria a rna
     if (RNA_LOG) cout << "l#002 " << "instanciando a rna " << id_rede << " em memoria" << endl;
 
@@ -239,7 +241,13 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
         return 0;
     }
 
-// prepara as matrizes de inputs
+/*
+ prepara as matrizes de inputs
+
+ armazena o valor do input da camada de entrada e prepara os registros das demais camadas com zero
+*/
+
+// pega a qtde de neuronios da RNA
     nr_tuplas = PQntuples ( retornoSelect );
     if (RNA_LOG) cout << "l#006 " << "grafo formado por " << nr_tuplas << " vertices" << endl;
     unsigned short int idx_neuro = 0; //posicao do neuronio na struct array
@@ -251,7 +259,7 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
 // obtem a posicao do neuronio no array struct
         idx_neuro = getIdxVectorByIdxNeuronio(atoi(PQgetvalue(retornoSelect, nr_tuplas, 1)), *rede);
 
-// checa se é o mesmo neuronio de origem. Se for incrementa o contador de inputs, caso contrario, zera a variavel
+// checa se é o mesmo neuronio de origem do registro anterior. Se for incrementa o contador de inputs, caso contrario, zera o contador
         if ( id_neuro_anterior == rede->at(idx_neuro).id )
         {
             if ( k_input >= NR_INPUTS )
@@ -270,11 +278,8 @@ int carrega_rna(std::vector<structNeuronio> *rede, unsigned short int id_rede)
             k_input = 0;
         }
 
-// grava o id do neuronio de origem da info (se camada de entrada coloca 0 no campo neuronio de origem
-        if ( rede->at(idx_neuro).camada == Entrada )
-            rede->at(idx_neuro).inputs[k_input].id_neuro_orig = 0;
-        else
-            rede->at(idx_neuro).inputs[k_input].id_neuro_orig = atoi(PQgetvalue(retornoSelect, nr_tuplas, 1)); //id orig
+// grava o id do neuronio de origem da informacao (se for neuronio da camada de entrada coloca 0 no campo neuronio de origem)
+        rede->at(idx_neuro).inputs[k_input].id_neuro_orig = ( rede->at ( idx_neuro ).camada == Entrada ) ? 0 : atoi ( PQgetvalue ( retornoSelect, nr_tuplas, 1 ) ) ; //id orig
 
 // grava o valor e destino
         rede->at(idx_neuro).inputs[k_input].id_neuro_dst = atoi(PQgetvalue(retornoSelect, nr_tuplas, 0)); //id dst
@@ -310,9 +315,15 @@ int updateVariaveisAmbiente(void)
         return 0;
     }
 
-// pegas as variaveis na tabela de registro pelo sistemas externos
 
-    PGresult *retornoSelectAmbiente = PQexec( conexao, "SELECT id_neuro, valor FROM fn WHERE id_neuro IN (SELECT id FROM neuronio WHERE neuronio.id_rna=1)" );
+// cria variavel para registrar o SQL de update do campo valor recebido
+    char strSQL[100];
+    memset (strSQL, '\x0', 100);
+
+// pegas as variaveis na tabela de registro pelo sistemas externos
+    strcpy ( strSQL, "SELECT id_neuro, valor FROM fn WHERE id_neuro IN (SELECT id FROM neuronio WHERE id_rna=1)" );
+    if (RNA_LOG) cout << "s#011 " << strSQL << endl;
+    PGresult *retornoSelectAmbiente = PQexec( conexao, strSQL );
 
     if ( (!PQresultStatus(retornoSelectAmbiente)) || (PQresultStatus(retornoSelectAmbiente)==PGRES_EMPTY_QUERY) || (PQresultStatus(retornoSelectAmbiente)!=PGRES_TUPLES_OK) )
     {
@@ -323,10 +334,6 @@ int updateVariaveisAmbiente(void)
 
 // armazena a qtde de neuronios a serem atualizados
     unsigned long int nr_tuplas = PQntuples ( retornoSelectAmbiente );
-
-// cria variavel para registrar o SQL de update do campo valor recebido
-    char strSQL[100];
-    memset (strSQL, '\x0', 100);
 
     while ( nr_tuplas-- ){
         //persiste na tabela de grafos os valores das variaveis de ambiente
@@ -391,7 +398,7 @@ calibragem
 
 int calibrarTodos(unsigned short int idCliente)
 {
-    if (RNA_LOG) cout << "l#019 " << "calibrando..." << endl;
+    if (RNA_LOG) cout << endl << "l#019 " << "calibrando..." << endl;
 
 //realiza a conexao
 
@@ -415,13 +422,16 @@ int calibrarTodos(unsigned short int idCliente)
     memset (strSQL, '\x0', 100);
     char strIdCliente[3];
     sprintf(strIdCliente, "%d", idCliente);
-
+    char strCdTransacao[3];
     /*
     item 001 - valor medio dos TEDs (id transacao = 2)
     Neuronio 001
     */
+    sprintf ( strCdTransacao, "%d", TRANS_TED );
 
-    strcpy (strSQL, "SELECT AVG(valor) FROM transacoes WHERE id_transacao=2 AND id_cliente=" );
+    strcpy (strSQL, "SELECT AVG(valor) FROM transacoes WHERE id_transacao=" );
+    strcat (strSQL, strCdTransacao );
+    strcat ( strSQL, " AND id_cliente=");
     strcat (strSQL, strIdCliente); //valor variavel ambiente
     if (RNA_LOG) cout << "s#006 " << strSQL << endl;
     retornoSelect = PQexec( conexao, strSQL );
@@ -441,7 +451,7 @@ int calibrarTodos(unsigned short int idCliente)
     */
     strcpy (strSQL, "select valor from transacoes where id_cliente=");
     strcat (strSQL, strIdCliente); //valor variavel ambiente
-    strcat (strSQL, " order by ts desc limit 1" );
+    strcat (strSQL, " order by ano,mes,dia,hh,mm,ss limit 1" );
     if (RNA_LOG) cout << "s#007 " << strSQL << endl;
     retornoSelect = PQexec( conexao, strSQL );
 
@@ -458,7 +468,7 @@ int calibrarTodos(unsigned short int idCliente)
     Neuronio 003
     */
     if (RNA_LOG) cout << "l#022 " << "gravando na tabela FN a qtde de TED para o ultimo CPF que transacionou nos ultimos 180 dias" << endl;
-    strcpy (strSQL, "update fn set valor = (select count(id_dst) from transacoes where id_dst=(select id_dst from transacoes order by ts desc limit 1)) where id_neuro=3");
+    strcpy (strSQL, "update fn set valor = (select count(id_dst) from transacoes where id_dst=(select id_dst from transacoes order by  ano,mes,dia,hh,mm,ss desc limit 1)) where id_neuro=3");
     if (RNA_LOG) cout << "s#010 " << strSQL << endl;
 
     if (PQresultStatus(PQexec (conexao, strSQL)) != PGRES_COMMAND_OK)
